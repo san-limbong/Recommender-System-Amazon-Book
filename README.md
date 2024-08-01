@@ -124,7 +124,155 @@ Books_rating.csv
 3. Memilih data, meliputi pemotongan dataset yang digunakan karena jumlah yang terlalu besar sehingga untuk meningkatkan aksebilitas saat perancangan model.
 4. Transformasi data, meliputi menyesuaikan data dengan format yang dianggap kurang tepat dan diperbaharui untuk menunjang perancagan model.
 
-## Modelling
+## Model Development dengan Content Based Filtering
+### TF-IDF Vectorizer
+TF-IDF adalah metode umum yang digunakan dalam sistem pengambilan informasi dan ekstraksi dokumen yang relevan dengan permintaan tertentu. Dalam pendekatan ini, terdapat dua komponen utama, yaitu TF dan IDF. TF (Term Frequency) mengukur seberapa sering sebuah kata atau istilah muncul dalam teks tertentu. Karena panjang dokumen dapat bervariasi, kami melakukan normalisasi dengan membagi frekuensi kemunculan kata dengan panjang dokumen untuk mengakomodasi perbedaan tersebut
+
+Berikut rumus TF:
+
+![tf](https://github.com/user-attachments/assets/4ffd81e6-d67f-4d4e-b239-12c100bc3ffc)
+
+IDF (Inverse Document Frequency) mengukur sejauh mana pentingnya sebuah istilah dalam keseluruhan kumpulan dokumen. Sementara TF memberikan bobot yang sama untuk semua istilah, IDF mengatasi masalah seperti kata-kata umum yang tidak relevan, seperti "is," "are," "am," dan sebagainya. IDF mengurangi bobot istilah yang sering muncul di banyak dokumen dan memberi bobot lebih pada istilah yang jarang ditemukan, sehingga membantu menyoroti istilah yang lebih signifikan.
+
+Rumus IDF:
+
+![idf](https://github.com/user-attachments/assets/8eae16b8-78a0-4e23-9df5-72940d61b6a5)
+
+Rumus perhitungan bobot tf-idf:
+
+![weight](https://github.com/user-attachments/assets/1de3bfcc-4fdd-427c-b670-3b829472e9e4)
+
+Skor TF-IDF digunakan untuk mengidentifikasi istilah-istilah yang menyimpan informasi penting dalam dokumen tertentu. Untuk menerapkan TF-IDF dalam kode, Anda dapat menggunakan fungsi TfidfVectorizer() dari pustaka scikit-learn. Fungsi TfidfVectorizer() akan menangani tokenisasi teks, membangun kosa kata, menghitung bobot frekuensi dokumen secara terbalik, dan memungkinkan Anda untuk melakukan encoding pada teks baru.
+
+Implementasinya adalah sebagai berikut.
+
+Kode Program
+
+```
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Inisialisasi TfidfVectorizer
+tf = TfidfVectorizer()
+
+# Melakukan perhitungan idf pada data categories
+tf.fit(data['categories'])
+
+# Mapping array dari fitur index integer ke fitur nama
+tf.get_feature_names_out()
+```
+
+Output:
+```
+array(['1939', '1945', 'ability', 'abnormalities', 'abolitionists',
+        ...
+       'world', 'writing', 'yoga', 'young', 'your'], dtype=object)
+```
+
+Kode Program:
+```
+# Melakukan fit lalu ditransformasikan ke bentuk matrix
+tfidf_matrix = tf.fit_transform(data['categories'])
+
+# Melihat ukuran matrix tfidf
+tfidf_matrix.shape
+```
+Output:
+`(4086, 306)`
+
+Kode program:
+```
+# Mengubah vektor tf-idf dalam bentuk matriks dengan fungsi todense()
+tfidf_matrix.todense()
+```
+Output:
+```
+matrix([[0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        ...,
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.],
+        [0., 0., 0., ..., 0., 0., 0.]])
+```
+Matriks tf-idf untuk beberapa judul buku dan kategori
+
+![matriks](https://github.com/user-attachments/assets/5a50b367-5b35-449d-af66-161144c461ce)
+
+
+### Cosine Similarity
+
+Cosine similarity mengukur tingkat kesamaan antara dua vektor dengan menentukan sejauh mana kedua vektor tersebut mengarah ke arah yang sama. Ia menghitung sudut kosinus antara kedua vektor, di mana semakin kecil sudut kosinus, semakin tinggi nilai cosine similarity.
+
+![sudut](https://github.com/user-attachments/assets/142a355b-b53f-47ab-915c-4793e6e1819a)
+
+Di Python, cosine similarity menghitung tingkat kesamaan dengan menggunakan dot product yang dinormalisasi antara dua vektor masukan, X dan Y. Metrik ini sering dipakai untuk mengukur kesamaan dokumen dalam analisis teks. Misalnya, dalam studi kasus ini, cosine similarity digunakan untuk menilai kesamaan antara judul buku dan kategorinya.
+
+Rumusnya sebagai berikut.
+
+![rumus cos](https://github.com/user-attachments/assets/1d6ccef6-8198-4cdb-91e5-0f73b3566e2b)
+
+**Implementasi...**
+Kode program
+```
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Menghitung cosine similarity pada matrix tf-idf
+cosine_sim = cosine_similarity(tfidf_matrix)
+cosine_sim
+```
+Output:
+```
+array([[1., 0., 0., ..., 0., 0., 0.],
+       [0., 1., 1., ..., 1., 0., 1.],
+       [0., 1., 1., ..., 1., 0., 1.],
+       ...,
+       [0., 1., 1., ..., 1., 0., 1.],
+       [0., 0., 0., ..., 0., 1., 0.],
+       [0., 1., 1., ..., 1., 0., 1.]])
+```
+
+Kode program:
+```
+# Membuat dataframe dari variabel cosine_sim dengan baris dan kolom berupa nama resto
+cosine_sim_df = pd.DataFrame(cosine_sim, index=data['Title'], columns=data['Title'])
+print('Shape:', cosine_sim_df.shape)
+
+# Melihat similarity matrix pada setiap resto
+cosine_sim_df.sample(5, axis=1).sample(10, axis=0)
+```
+
+Output:
+
+![output cosine](https://github.com/user-attachments/assets/05ce6e29-9988-4d2e-b250-7c73212b40b8)
+
+
+
+
+### Mendapatkan Rekomendasi
+Berikut implementasi kode penggunaan content based filtering serta outputnya:
+Kode program:
+```
+def book_recommendations(nama_buku, similarity_data=cosine_sim_df, items=data[['Title', 'categories']], k=5):
+    # Mengambil data dengan menggunakan argpartition untuk melakukan partisi secara tidak langsung sepanjang sumbu yang diberikan
+    # Dataframe diubah menjadi numpy
+    # Range(start, stop, step)
+    index = similarity_data.loc[:,nama_buku].to_numpy().argpartition(
+        range(-1, -k, -1))
+
+    # Mengambil data dengan similarity terbesar dari index yang ada
+    closest = similarity_data.columns[index[-1:-(k+2):-1]]
+
+    # Drop nama_buku agar nama resto yang dicari tidak muncul dalam daftar rekomendasi
+    closest = closest.drop(nama_buku, errors='ignore')
+
+    return pd.DataFrame(closest).merge(items).head(k)
+```
+Output:
+
+![implementasi content based](https://github.com/user-attachments/assets/d207ecbd-65dd-4db5-b107-0d446de8eaea)
+
+
+## Model Development dengan Collaborative Filtering
 
 ## Evaluasi
 Metrik yang akan kita gunakan pada prediksi ini adalah MSE atau Mean Squared Error yang menghitung jumlah selisih kuadrat rata-rata nilai sebenarnya dengan nilai prediksi. MSE didefinisikan dalam persamaan berikut.
