@@ -119,6 +119,10 @@ Books_rating.csv
 
 
 ## Data Preparation
+1. Membersihkan data, meliputi _missing value_ dan data duplikat.
+2. Mengkontruksi data, meliputi pemilihan atribut yang dianggap relevan untuk perancangan proyek.
+3. Memilih data, meliputi pemotongan dataset yang digunakan karena jumlah yang terlalu besar sehingga untuk meningkatkan aksebilitas saat perancangan model.
+4. Transformasi data, meliputi menyesuaikan data dengan format yang dianggap kurang tepat dan diperbaharui untuk menunjang perancagan model.
 
 ## Modelling
 
