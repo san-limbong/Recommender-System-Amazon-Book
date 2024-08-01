@@ -6,7 +6,7 @@ Title : Recommender System - Amazon Book
 
 ### Latar Belakang
 
-![latar](https://github.com/user-attachments/assets/372ea83e-d56d-4dd3-bc91-694b2dd13682)
+![latar](https://github.com/user-attachments/assets/98979c0a-4741-49a0-83c4-469a15260b9e)
 
 
 
@@ -78,20 +78,23 @@ y_pred = nilai prediksi
 
 Berikut hasil evaluasi rmse pada proyek ini.
 
-![rmse](https://github.com/user-attachments/assets/a515e9f3-b63d-40ec-89f0-11ca8bf7f280)
+![rmse](https://github.com/user-attachments/assets/670b8319-1161-43fa-a7f9-f1d6350559f2)
 
 ## Deployment
 [link](https://sistemrekomendasibuku.streamlit.app/)
 
 **Content Based Preview**
 
-![contentbased-1](https://github.com/user-attachments/assets/78871d12-f16d-4602-9836-a9effe71ad3a)
+![contentbased-1](https://github.com/user-attachments/assets/2c6117d6-b733-49c9-8d3b-45428218ba6d)
 
-![contentbased-2](https://github.com/user-attachments/assets/e89acb42-c08d-42d1-9f44-ed18d8c48d28)
+![contentbased-2](https://github.com/user-attachments/assets/a38c75ee-d191-4281-894c-47cdbb4809ca)
+
 
 **Collaborative Filtering Preview**
 
-![collaborative-1](https://github.com/user-attachments/assets/1fab9d76-c199-42db-91e1-015e769debd9)
+![collaborative-1](https://github.com/user-attachments/assets/2ea1e2e7-185d-464e-9a32-0929502d9bb1)
 
-![collaborative-2](https://github.com/user-attachments/assets/abee646b-5af8-42f3-8879-0c5f6dc888e9)
+![collaborative-2](https://github.com/user-attachments/assets/c76d3243-e73c-4cdc-995a-1df2028d2e85)
+
+
 
