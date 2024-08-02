@@ -28,15 +28,20 @@ Berlandaskan hal tersebut, akan dilakukan pengembangan sistem rekomendasi sebaga
 ## Business Understanding
 ### Problem Statements
 Berdasarkan latar belakang di atas, berikut akan dijabarkan pokok permasalahan yang dibahas dalam proyek sebagai berikut.
-- Bagaimana merancang sistem rekomendasi buku berdasarkan kesamaan konten atau deskripsi item terhadap pengguna atau pembaca (Content-Based Filtering)?
-- Bagaimana merancang sistem rekomendasi buku berdasarkan kesamaan rating atau review yang diberikan pengguna lainnya terhadap pembaca (Collaborative Filtering)?
+- Bagaimana merancang sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya?
+- Bagaimana merancang sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_?
 
 ### Goals
 Tujuan dari proyek ini adalah:
-- Merancang sistem rekomendasi buku berdasarkan kesamaan konten atau deskripsi item terhadap pengguna atau pembaca (Content-Based Filtering).
-- Merancang sistem rekomendasi buku berdasarkan kesamaan rating atau review yang diberikan pengguna lainnya terhadap pembaca (Collaborative Filtering)
+- Merancang sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya.
+- Merancang sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_
 
 ### Solution Statements
+Berikut adalah beberapa pendekatan yang bisa digunakan untuk membangun sistem rekomendasi buku:
+
+1. Content-Based Filtering (CBF): Pendekatan ini memanfaatkan informasi tentang buku, seperti kategori dan deskripsi isi, untuk memahami preferensi pengguna. Algoritma ini mencocokkan preferensi pengguna dengan atribut-atribut buku dan memberikan rekomendasi buku yang memiliki atribut sesuai dengan preferensi pengguna dalam konteks case ini adalah kategori _(categories)_.
+
+2. Collaborative Filtering (CF). CF dapat diimplementasikan dengan dua varian, yaitu User-Based CF dan Item-Based CF. User-Based CF mencari pengguna serupa dan merekomendasikan buku yang disukai oleh pengguna serupa. Item-Based CF mencari buku serupa dan merekomendasikan buku yang mirip dengan yang sudah disukai oleh pengguna. Pada konteks perancangan diharapkan dapat memprediksi rating atau preferensi pengguna terhadap buku berdasarkan embedding (representasi numerik) dari pengguna dan buku.
 
 ## Data Understanding
 ### EDA - Deskripsi Variabel
@@ -380,25 +385,170 @@ Output:
 ```
 
 #### Build Model with RecommenderNet
+RecommenderNet adalah implementasi dari model pembelajaran mesin yang menggunakan embedding untuk menangkap preferensi pengguna dan fitur item, serta produk titik untuk menghasilkan skor rekomendasi. Model ini sering digunakan dalam sistem rekomendasi untuk meningkatkan pengalaman pengguna dengan menyediakan rekomendasi yang dipersonalisasi.
 
-## Evaluasi
-Metrik yang akan kita gunakan pada prediksi ini adalah MSE atau Mean Squared Error yang menghitung jumlah selisih kuadrat rata-rata nilai sebenarnya dengan nilai prediksi. MSE didefinisikan dalam persamaan berikut.
+Implementasi kode:
+```
+class RecommenderNet(tf.keras.Model):
 
-![mse](https://github.com/user-attachments/assets/759e96bb-886c-419e-b612-b6047e5d9c61)
+  # Insialisasi fungsi
+  def __init__(self, num_users, num_books, embedding_size, **kwargs):
+    super(RecommenderNet, self).__init__(**kwargs)
+    self.num_users = num_users
+    self.num_books = num_books
+    self.embedding_size = embedding_size
+    self.user_embedding = layers.Embedding( # layer embedding user
+        num_users,
+        embedding_size,
+        embeddings_initializer = 'he_normal',
+        embeddings_regularizer = keras.regularizers.l2(1e-6)
+    )
+    self.user_bias = layers.Embedding(num_users, 1) # layer embedding user bias
+    self.books_embedding = layers.Embedding( # layer embeddings books
+        num_books,
+        embedding_size,
+        embeddings_initializer = 'he_normal',
+        embeddings_regularizer = keras.regularizers.l2(1e-6)
+    )
+    self.books_bias = layers.Embedding(num_books, 1) # layer embedding books bias
+
+  def call(self, inputs):
+    user_vector = self.user_embedding(inputs[:,0]) # memanggil layer embedding 1
+    user_bias = self.user_bias(inputs[:, 0]) # memanggil layer embedding 2
+    books_vector = self.books_embedding(inputs[:, 1]) # memanggil layer embedding 3
+    books_bias = self.books_bias(inputs[:, 1]) # memanggil layer embedding 4
+
+    dot_user_books = tf.tensordot(user_vector, books_vector, 2)
+
+    x = dot_user_books + user_bias + books_bias
+
+    return tf.nn.sigmoid(x) # activation sigmoid
+```
+```
+model = RecommenderNet(num_users, num_books, 50) # inisialisasi model
+
+# model compile
+model.compile(
+    loss = tf.keras.losses.BinaryCrossentropy(),
+    optimizer = keras.optimizers.Adam(learning_rate=0.001),
+    metrics=[tf.keras.metrics.RootMeanSquaredError()]
+)
+```
 
 ```
+# Memulai training
+
+history = model.fit(
+    x = x_train,
+    y = y_train,
+    batch_size = 8,
+    epochs = 8,
+    validation_data = (x_val, y_val)
+)
+```
+
+### Mendapatkan Rekomendasi
+Berikut implementasi kode penggunaan collaborative filtering serta outputnya:
+```
+import pandas as pd
+import numpy as np
+
+# Data input pengguna
+Id = 1214213432
+Title = 'Wuthering Heights'
+User_id = 'A14OJS0VWMOSWO'
+review_score = 2.0
+
+# Proses encoding untuk input pengguna
+encoded_user = user_to_user_encoded.get(User_id)
+encoded_book = book_to_book_encoded.get(Title)
+
+# Buat DataFrame baru dengan data yang sudah di-encode
+new_data = pd.DataFrame([[Id, Title, User_id, review_score, encoded_user, encoded_book]],
+                        columns=['Id', 'Title', 'User_id', 'review/score', 'user', 'book'])
+
+# Menggunakan User_id baru sebagai user_id
+user_id = User_id
+
+# Update variabel `resto_visited_by_user` dengan input pengguna baru
+resto_visited_by_user = new_data[new_data.User_id == user_id]
+
+# Ambil buku yang belum dikunjungi oleh pengguna
+resto_not_visited = details_df[~details_df['Title'].isin(resto_visited_by_user.Title.values)]['Title']
+resto_not_visited = list(
+    set(resto_not_visited)
+    .intersection(set(book_to_book_encoded.keys()))
+)
+
+resto_not_visited = [[book_to_book_encoded.get(x)] for x in resto_not_visited]
+user_encoder = user_to_user_encoded.get(user_id)
+user_resto_array = np.hstack(
+    ([[user_encoder]] * len(resto_not_visited), resto_not_visited)
+)
+
+# Prediksi rating untuk buku yang belum dikunjungi
+ratings = model.predict(user_resto_array).flatten()
+
+# Ambil 10 rekomendasi teratas
+top_ratings_indices = ratings.argsort()[-10:][::-1]
+recommended_resto_ids = [
+    book_encoded_to_book.get(resto_not_visited[x][0]) for x in top_ratings_indices
+]
+
+print('Showing recommendations for users: {}'.format(user_id))
+print('===' * 9)
+print('Book with high ratings from user')
+print('----' * 8)
+
+top_resto_user = (
+    resto_visited_by_user.sort_values(
+        by='review/score',
+        ascending=False
+    )
+    .head(5)
+    .Title.values
+)
+
+resto_df_rows = details_df[details_df['Title'].isin(top_resto_user)]
+for row in resto_df_rows.itertuples():
+    print(row.Title, ':', row.categories)
+
+print('----' * 8)
+print('Top 10 books recommendation')
+print('----' * 8)
+
+recommended_resto = details_df[details_df['Title'].isin(recommended_resto_ids)]
+for row in recommended_resto.itertuples():
+    print(row.Title, ':', row.categories)
+
+```
+
+Output:
+
+![1](https://github.com/user-attachments/assets/dd470c9d-b4b7-4435-9c77-982b3d09ff9e)
+
+
+## Evaluasi
+Metrik yang akan kita gunakan pada prediksi ini adalah RMSE atau Root Mean Squared Error. Root Mean Square Error (RMSE) adalah salah satu metrik evaluasi yang sering digunakan dalam pemodelan statistik dan machine learning, Fungsi dari RMSE adalah untuk mengukur seberapa baik suatu model memetakan nilai prediksi ke nilai sebenarnya dengan menghitung akar kuadrat dari rata-rata dari kuadrat kesalahan. RMSE dihitung dengan mengambil akar kuadrat dari rata-rata dari kuadrat selisih antara setiap prediksi individu dan nilai sebenarnya.
+
+![rmse](https://github.com/user-attachments/assets/f0653cde-4aa5-43e9-a51b-e2aba9d58709)
+
 Keterangan:
-N = jumlah dataset
-yi = nilai sebenarnya
-y_pred = nilai prediksi
+```
+    n adalah jumlah total observasi atau sampel.
+    yi adalah nilai aktual atau nilai sebenarnya dari observasi ke-i.
+    Ŷi adalah nilai prediksi model untuk observasi ke-i.
 ```
 
 Berikut hasil evaluasi rmse pada proyek ini.
 
 ![rmse](https://github.com/user-attachments/assets/670b8319-1161-43fa-a7f9-f1d6350559f2)
 
+Berdasarkan data tersebut, masih terdapat kekurangan dalam bentuk error rate yang cenderung kurang baik, dan overfitting. Hal ini disebabkan keterbatasan sumber daya atau _environtment_ serta kurang lengkapnya kategori bawaan dari dataset yang disediakan. 
+
 ## Deployment
-[link](https://sistemrekomendasibuku.streamlit.app/)
+
+Cobain rekomendasi buku dengan klik [disini ](https://sistemrekomendasibuku.streamlit.app/)
 
 **Content Based Preview**
 
@@ -413,5 +563,6 @@ Berikut hasil evaluasi rmse pada proyek ini.
 
 ![collaborative-2](https://github.com/user-attachments/assets/c76d3243-e73c-4cdc-995a-1df2028d2e85)
 
-
-
+## Kesimpulan
+1. Sistem rekomendasi buku sudah dapat diterima dengan mengimplementasikan Content-Based Filtering dan Collaborative Filtering, sesuai sebagaimana ketentuan perekomendasian masing - masing.
+2. Sistem rekomendasi masih memiliki catatan, yakni terkait penggunaan dataset yang lebih lengkap serta pelatihan model yang sebaiknya lebih ditingkatkan guna mendapatkan hasil rekomendasi yang lebih baik lagi.
