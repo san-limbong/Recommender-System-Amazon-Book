@@ -256,7 +256,7 @@ Output:
 
 
 
-### Mendapatkan Rekomendasi
+### Mendapatkan top-N recommendation
 Berikut implementasi kode penggunaan content based filtering serta outputnya:
 Kode program:
 ```
@@ -447,7 +447,7 @@ history = model.fit(
 )
 ```
 
-### Mendapatkan Rekomendasi
+### Mendapatkan top-N recommendation
 Berikut implementasi kode penggunaan collaborative filtering serta outputnya:
 ```
 import pandas as pd
