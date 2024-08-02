@@ -124,8 +124,10 @@ Books_rating.csv
 3. Memilih data, meliputi pemotongan dataset yang digunakan karena jumlah yang terlalu besar sehingga untuk meningkatkan aksebilitas saat perancangan model.
 4. Transformasi data, meliputi menyesuaikan data dengan format yang dianggap kurang tepat dan diperbaharui untuk menunjang perancagan model.
 
-## Model Development dengan Content Based Filtering
-### TF-IDF Vectorizer
+## Modelling
+
+### Model Development dengan Content Based Filtering
+#### TF-IDF Vectorizer
 TF-IDF adalah metode umum yang digunakan dalam sistem pengambilan informasi dan ekstraksi dokumen yang relevan dengan permintaan tertentu. Dalam pendekatan ini, terdapat dua komponen utama, yaitu TF dan IDF. TF (Term Frequency) mengukur seberapa sering sebuah kata atau istilah muncul dalam teks tertentu. Karena panjang dokumen dapat bervariasi, kami melakukan normalisasi dengan membagi frekuensi kemunculan kata dengan panjang dokumen untuk mengakomodasi perbedaan tersebut
 
 Berikut rumus TF:
@@ -199,7 +201,7 @@ Matriks tf-idf untuk beberapa judul buku dan kategori
 ![matriks](https://github.com/user-attachments/assets/5a50b367-5b35-449d-af66-161144c461ce)
 
 
-### Cosine Similarity
+#### Cosine Similarity
 
 Cosine similarity mengukur tingkat kesamaan antara dua vektor dengan menentukan sejauh mana kedua vektor tersebut mengarah ke arah yang sama. Ia menghitung sudut kosinus antara kedua vektor, di mana semakin kecil sudut kosinus, semakin tinggi nilai cosine similarity.
 
@@ -211,7 +213,8 @@ Rumusnya sebagai berikut.
 
 ![rumus cos](https://github.com/user-attachments/assets/1d6ccef6-8198-4cdb-91e5-0f73b3566e2b)
 
-**Implementasi...**
+Implementasinya adalah sebagai berikut.
+
 Kode program
 ```
 from sklearn.metrics.pairwise import cosine_similarity
@@ -272,7 +275,111 @@ Output:
 ![implementasi content based](https://github.com/user-attachments/assets/d207ecbd-65dd-4db5-b107-0d446de8eaea)
 
 
-## Model Development dengan Collaborative Filtering
+### Model Development dengan Collaborative Filtering
+
+#### Encoding
+Pada bagian ini, akan dilakukan penyandian (encode) fitur `User_id` dan `Title` ke dalam teks integer. 
+Berikut tahapan proses encoding yang dilakukan.
+
+Kode program:
+```
+# Mengubah User_id menjadi list tanpa nilai yang sama
+user_ids = df['User_id'].unique().tolist()
+print('list User_id: ', user_ids)
+
+# Melakukan encoding User_id
+user_to_user_encoded = {x: i for i, x in enumerate(user_ids)}
+print('encoded User_id : ', user_to_user_encoded)
+
+# Melakukan proses encoding angka ke ke User_id
+user_encoded_to_user = {i: x for i, x in enumerate(user_ids)}
+print('encoded angka ke User_id: ', user_encoded_to_user)
+
+# Mengubah Book menjadi list tanpa nilai yang sama
+book_ids = df['Title'].unique().tolist()
+
+# Melakukan proses encoding Book
+book_to_book_encoded = {x: i for i, x in enumerate(book_ids)}
+
+# Melakukan proses encoding angka ke Title
+book_encoded_to_book = {i: x for i, x in enumerate(book_ids)}
+```
+
+Output:
+
+![encode user](https://github.com/user-attachments/assets/737f718d-c6cd-41fd-a143-163736e39fde)
+
+Kemudian akan dilakukan pemetaan `User_id` dan `Title` kedalam dataframe untuk dikelola.
+```
+# Mapping userID ke dataframe user
+df['user'] = df['User_id'].map(user_to_user_encoded)
+
+# Mapping Book ke dataframe resto
+df['book'] = df['Title'].map(book_to_book_encoded)
+```
+
+Terakhir dalam tahapan encode, melakukan pengecekan jumlah data yang dimiliki, seperti berikut.
+Kode program:
+```
+# Mendapatkan jumlah user
+num_users = len(user_to_user_encoded)
+print(num_users)
+
+# Mendapatkan jumlah judul
+num_books = len(book_to_book_encoded)
+print(num_books)
+
+# Nilai minimum rating
+min_rating = min(df['review/score'])
+
+# Nilai maksimal rating
+max_rating = max(df['review/score'])
+
+print('Number of User: {}, Number of Book: {}, Min Rating: {}, Max Rating: {}'.format(
+    num_users, num_books, min_rating, max_rating
+))
+```
+
+Output:
+```
+37559
+17165
+Number of User: 37559, Number of Book: 17165, Min Rating: 1.0, Max Rating: 5.0
+```
+
+#### Split Data
+Kode program:
+```
+# Membuat variabel x untuk mencocokkan data user dan resto menjadi satu value
+x = df[['user', 'book']].values
+
+# Membuat variabel y untuk membuat rating dari hasil
+y = df['review/score'].apply(lambda x: (x - min_rating) / (max_rating - min_rating)).values
+
+# Membagi menjadi 80% data train dan 20% data validasi
+train_indices = int(0.8 * df.shape[0])
+x_train, x_val, y_train, y_val = (
+    x[:train_indices],
+    x[train_indices:],
+    y[:train_indices],
+    y[train_indices:]
+)
+
+print(x, y)
+```
+
+Output:
+```
+[[    0     0]
+ [    1     1]
+ [    2     2]
+ ...
+ [37558   136]
+ [25846  4549]
+ [31607   406]] [1.   0.   1.   ... 1.   0.75 1.  ]
+```
+
+#### Build Model with RecommenderNet
 
 ## Evaluasi
 Metrik yang akan kita gunakan pada prediksi ini adalah MSE atau Mean Squared Error yang menghitung jumlah selisih kuadrat rata-rata nilai sebenarnya dengan nilai prediksi. MSE didefinisikan dalam persamaan berikut.
