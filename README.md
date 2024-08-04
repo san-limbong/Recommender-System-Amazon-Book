@@ -4,6 +4,8 @@ Project Domain (Tags) : **Recommender System**
 
 Title : Recommender System - Amazon Book
 
+Cobain rekomendasi buku dengan klik [disini ](https://sistemrekomendasibuku.streamlit.app/)
+
 ### Project Overview
 
 ![latar](https://github.com/user-attachments/assets/98979c0a-4741-49a0-83c4-469a15260b9e)
