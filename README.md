@@ -259,25 +259,25 @@ class RecommenderNet(tf.keras.Model):
 Komponen-komponen RecommenderNet:
 
   1. User Embedding:
-      self.user_embedding adalah lapisan embedding untuk pengguna. Lapisan ini mengubah ID pengguna menjadi vektor embedding dengan ukuran tertentu (embedding_size). Vektor ini merepresentasikan fitur-fitur pengguna dalam ruang berdimensi lebih rendah.
+      self.user_embedding adalah lapisan embedding untuk pengguna. Lapisan ini mengubah User_Id menjadi vektor embedding dengan ukuran tertentu (embedding_size). Vektor ini merepresentasikan fitur-fitur pengguna dalam ruang berdimensi lebih rendah.
 
   2. User Bias:
       self.user_bias adalah lapisan embedding untuk bias pengguna. Bias ini adalah nilai skalar yang terkait dengan setiap pengguna untuk menangkap preferensi umum mereka.
 
   3. Books Embedding:
-      self.books_embedding adalah lapisan embedding untuk buku. Lapisan ini mengubah ID buku menjadi vektor embedding dengan ukuran tertentu (embedding_size). Vektor ini merepresentasikan fitur-fitur buku dalam ruang berdimensi lebih rendah.
+      self.books_embedding adalah lapisan embedding untuk buku. Lapisan ini mengubah Title(judul buku) menjadi vektor embedding dengan ukuran tertentu (embedding_size). Vektor ini merepresentasikan fitur-fitur buku dalam ruang berdimensi lebih rendah.
 
   4. Books Bias:
-      self.books_bias adalah lapisan embedding untuk bias buku. Bias ini adalah nilai skalar yang terkait dengan setiap buku untuk menangkap popularitas umum mereka.
+      self.books_bias adalah lapisan embedding untuk bias buku. Bias ini adalah nilai skalar yang terkait dengan setiap buku untuk menangkap rating/score mereka.
 
 Fungsi call:
 
-  - Fungsi call adalah fungsi yang dipanggil saat model melakukan forward pass. Fungsi ini menerima input berupa pasangan ID pengguna dan ID buku, lalu menghasilkan prediksi rating.
+  - Fungsi call adalah fungsi yang dipanggil saat model melakukan forward pass. Fungsi ini menerima input berupa pasangan User_Id dan Title(judul buku), lalu menghasilkan prediksi rating.
   - Langkah-langkah dalam call:
-      1. Mengambil vektor embedding pengguna berdasarkan ID pengguna (inputs[:, 0]).
-      2. Mengambil bias pengguna berdasarkan ID pengguna.
-      3. Mengambil vektor embedding buku berdasarkan ID buku (inputs[:, 1]).
-      4. Mengambil bias buku berdasarkan ID buku.
+      1. Mengambil vektor embedding pengguna berdasarkan User_Id (inputs[:, 0]).
+      2. Mengambil bias pengguna berdasarkan User_Id.
+      3. Mengambil vektor embedding buku berdasarkan Title(judul buku) (inputs[:, 1]).
+      4. Mengambil bias buku berdasarkan Title(judul buku).
       5. Melakukan dot product antara vektor embedding pengguna dan vektor embedding buku untuk mendapatkan interaksi pengguna-buku.
       6. Menambahkan bias pengguna dan bias buku ke hasil dot product.
       7. Menggunakan fungsi aktivasi sigmoid untuk menghasilkan prediksi rating akhir.
