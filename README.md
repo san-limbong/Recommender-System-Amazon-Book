@@ -156,7 +156,7 @@ details['categories'] = details['categories'].str.replace('[', '').str.replace('
 ## Modelling
 
 ### Model Development dengan Content Based Filtering
-#### TF-IDF Vectorizer
+#### 1. Mengimplementasikan TF-IDF
 TF-IDF adalah metode umum yang digunakan dalam sistem pengambilan informasi dan ekstraksi dokumen yang relevan dengan permintaan tertentu. Dalam pendekatan ini, terdapat dua komponen utama, yaitu TF dan IDF. TF (Term Frequency) mengukur seberapa sering sebuah kata atau istilah muncul dalam teks tertentu. Karena panjang dokumen dapat bervariasi, kami melakukan normalisasi dengan membagi frekuensi kemunculan kata dengan panjang dokumen untuk mengakomodasi perbedaan tersebut
 
 Berikut rumus TF:
@@ -175,62 +175,12 @@ Rumus perhitungan bobot tf-idf:
 
 Skor TF-IDF digunakan untuk mengidentifikasi istilah-istilah yang menyimpan informasi penting dalam dokumen tertentu. Untuk menerapkan TF-IDF dalam kode, Anda dapat menggunakan fungsi TfidfVectorizer() dari pustaka scikit-learn. Fungsi TfidfVectorizer() akan menangani tokenisasi teks, membangun kosa kata, menghitung bobot frekuensi dokumen secara terbalik, dan memungkinkan Anda untuk melakukan encoding pada teks baru.
 
-Implementasinya adalah sebagai berikut.
-
-Kode Program
-
-```
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-# Inisialisasi TfidfVectorizer
-tf = TfidfVectorizer()
-
-# Melakukan perhitungan idf pada data categories
-tf.fit(data['categories'])
-
-# Mapping array dari fitur index integer ke fitur nama
-tf.get_feature_names_out()
-```
-
-Output:
-```
-array(['1939', '1945', 'ability', 'abnormalities', 'abolitionists',
-        ...
-       'world', 'writing', 'yoga', 'young', 'your'], dtype=object)
-```
-
-Kode Program:
-```
-# Melakukan fit lalu ditransformasikan ke bentuk matrix
-tfidf_matrix = tf.fit_transform(data['categories'])
-
-# Melihat ukuran matrix tfidf
-tfidf_matrix.shape
-```
-Output:
-`(4086, 306)`
-
-Kode program:
-```
-# Mengubah vektor tf-idf dalam bentuk matriks dengan fungsi todense()
-tfidf_matrix.todense()
-```
-Output:
-```
-matrix([[0., 0., 0., ..., 0., 0., 0.],
-        [0., 0., 0., ..., 0., 0., 0.],
-        [0., 0., 0., ..., 0., 0., 0.],
-        ...,
-        [0., 0., 0., ..., 0., 0., 0.],
-        [0., 0., 0., ..., 0., 0., 0.],
-        [0., 0., 0., ..., 0., 0., 0.]])
-```
-Matriks tf-idf untuk beberapa judul buku dan kategori
+Berikut matriks tf-idf untuk beberapa judul buku dan kategori
 
 ![matriks](https://github.com/user-attachments/assets/5a50b367-5b35-449d-af66-161144c461ce)
 
 
-#### Cosine Similarity
+#### 2. Menerapkan Cosine Similarity
 
 Cosine similarity mengukur tingkat kesamaan antara dua vektor dengan menentukan sejauh mana kedua vektor tersebut mengarah ke arah yang sama. Ia menghitung sudut kosinus antara kedua vektor, di mana semakin kecil sudut kosinus, semakin tinggi nilai cosine similarity.
 
@@ -242,312 +192,34 @@ Rumusnya sebagai berikut.
 
 ![rumus cos](https://github.com/user-attachments/assets/1d6ccef6-8198-4cdb-91e5-0f73b3566e2b)
 
-Implementasinya adalah sebagai berikut.
-
-Kode program
-```
-from sklearn.metrics.pairwise import cosine_similarity
-
-# Menghitung cosine similarity pada matrix tf-idf
-cosine_sim = cosine_similarity(tfidf_matrix)
-cosine_sim
-```
-Output:
-```
-array([[1., 0., 0., ..., 0., 0., 0.],
-       [0., 1., 1., ..., 1., 0., 1.],
-       [0., 1., 1., ..., 1., 0., 1.],
-       ...,
-       [0., 1., 1., ..., 1., 0., 1.],
-       [0., 0., 0., ..., 0., 1., 0.],
-       [0., 1., 1., ..., 1., 0., 1.]])
-```
-
-Kode program:
-```
-# Membuat dataframe dari variabel cosine_sim dengan baris dan kolom berupa nama resto
-cosine_sim_df = pd.DataFrame(cosine_sim, index=data['Title'], columns=data['Title'])
-print('Shape:', cosine_sim_df.shape)
-
-# Melihat similarity matrix pada setiap resto
-cosine_sim_df.sample(5, axis=1).sample(10, axis=0)
-```
-
-Output:
+Berikut hasil penerapannya.
 
 ![output cosine](https://github.com/user-attachments/assets/05ce6e29-9988-4d2e-b250-7c73212b40b8)
 
 
+### 3. Mendapatkan top-N recommendation
+Pada bagian berikut, akan ditampilkan hasil rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya
 
-
-### Mendapatkan top-N recommendation
-Berikut implementasi kode penggunaan content based filtering serta outputnya:
-Kode program:
-```
-def book_recommendations(nama_buku, similarity_data=cosine_sim_df, items=data[['Title', 'categories']], k=5):
-    # Mengambil data dengan menggunakan argpartition untuk melakukan partisi secara tidak langsung sepanjang sumbu yang diberikan
-    # Dataframe diubah menjadi numpy
-    # Range(start, stop, step)
-    index = similarity_data.loc[:,nama_buku].to_numpy().argpartition(
-        range(-1, -k, -1))
-
-    # Mengambil data dengan similarity terbesar dari index yang ada
-    closest = similarity_data.columns[index[-1:-(k+2):-1]]
-
-    # Drop nama_buku agar nama resto yang dicari tidak muncul dalam daftar rekomendasi
-    closest = closest.drop(nama_buku, errors='ignore')
-
-    return pd.DataFrame(closest).merge(items).head(k)
-```
-Output:
-
-![implementasi content based](https://github.com/user-attachments/assets/d207ecbd-65dd-4db5-b107-0d446de8eaea)
+![implementasi content based](https://github.com/user-attachments/assets/d7b9cffb-b6a6-44a7-84a3-5f2e1a8cc13f)
 
 
 ### Model Development dengan Collaborative Filtering
 
-#### Encoding
-Pada bagian ini, akan dilakukan penyandian (encode) fitur `User_id` dan `Title` ke dalam teks integer. 
-Berikut tahapan proses encoding yang dilakukan.
+#### 1. Melakukan Encoding
+Pada bagian ini, akan dilakukan penyandian (encode) fitur User_id dan Title ke dalam teks integer. 
+![encode user](https://github.com/user-attachments/assets/d6d8d857-2b2a-46fc-9569-1daa9558b5fe)
 
-Kode program:
-```
-# Mengubah User_id menjadi list tanpa nilai yang sama
-user_ids = df['User_id'].unique().tolist()
-print('list User_id: ', user_ids)
 
-# Melakukan encoding User_id
-user_to_user_encoded = {x: i for i, x in enumerate(user_ids)}
-print('encoded User_id : ', user_to_user_encoded)
-
-# Melakukan proses encoding angka ke ke User_id
-user_encoded_to_user = {i: x for i, x in enumerate(user_ids)}
-print('encoded angka ke User_id: ', user_encoded_to_user)
-
-# Mengubah Book menjadi list tanpa nilai yang sama
-book_ids = df['Title'].unique().tolist()
-
-# Melakukan proses encoding Book
-book_to_book_encoded = {x: i for i, x in enumerate(book_ids)}
-
-# Melakukan proses encoding angka ke Title
-book_encoded_to_book = {i: x for i, x in enumerate(book_ids)}
-```
-
-Output:
-
-![encode user](https://github.com/user-attachments/assets/737f718d-c6cd-41fd-a143-163736e39fde)
-
-Kemudian akan dilakukan pemetaan `User_id` dan `Title` kedalam dataframe untuk dikelola.
-```
-# Mapping userID ke dataframe user
-df['user'] = df['User_id'].map(user_to_user_encoded)
-
-# Mapping Book ke dataframe resto
-df['book'] = df['Title'].map(book_to_book_encoded)
-```
-
-Terakhir dalam tahapan encode, melakukan pengecekan jumlah data yang dimiliki, seperti berikut.
-Kode program:
-```
-# Mendapatkan jumlah user
-num_users = len(user_to_user_encoded)
-print(num_users)
-
-# Mendapatkan jumlah judul
-num_books = len(book_to_book_encoded)
-print(num_books)
-
-# Nilai minimum rating
-min_rating = min(df['review/score'])
-
-# Nilai maksimal rating
-max_rating = max(df['review/score'])
-
-print('Number of User: {}, Number of Book: {}, Min Rating: {}, Max Rating: {}'.format(
-    num_users, num_books, min_rating, max_rating
-))
-```
-
-Output:
-```
-37559
-17165
-Number of User: 37559, Number of Book: 17165, Min Rating: 1.0, Max Rating: 5.0
-```
-
-#### Split Data
+#### 2. Split Data
 Pada bagian ini, data train dan validasi dibagi dengan komposisi 80:20. Namun sebelumnya, kita perlu memetakan (mapping) data user dan book menjadi satu value. Kemudian, membuat rating dalam skala 0 sampai 1 agar mudah dalam melakukan proses training. 
 
-Kode program:
-```
-# Membuat variabel x untuk mencocokkan data user dan resto menjadi satu value
-x = df[['user', 'book']].values
-
-# Membuat variabel y untuk membuat rating dari hasil
-y = df['review/score'].apply(lambda x: (x - min_rating) / (max_rating - min_rating)).values
-
-# Membagi menjadi 80% data train dan 20% data validasi
-train_indices = int(0.8 * df.shape[0])
-x_train, x_val, y_train, y_val = (
-    x[:train_indices],
-    x[train_indices:],
-    y[:train_indices],
-    y[train_indices:]
-)
-
-print(x, y)
-```
-
-Output:
-```
-[[    0     0]
- [    1     1]
- [    2     2]
- ...
- [37558   136]
- [25846  4549]
- [31607   406]] [1.   0.   1.   ... 1.   0.75 1.  ]
-```
-
-#### Build Model with RecommenderNet
+#### 3. Membangun model dengan RecommenderNet
 RecommenderNet adalah implementasi dari model pembelajaran mesin yang menggunakan embedding untuk menangkap preferensi pengguna dan fitur item, serta produk titik untuk menghasilkan skor rekomendasi. Model ini sering digunakan dalam sistem rekomendasi untuk meningkatkan pengalaman pengguna dengan menyediakan rekomendasi yang dipersonalisasi.
 
-Implementasi kode:
-```
-class RecommenderNet(tf.keras.Model):
+### 4. Mendapatkan top-N recommendation
+Pada bagian berikut, akan ditampilkan hasil rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya (review/score atau rating).
 
-  # Insialisasi fungsi
-  def __init__(self, num_users, num_books, embedding_size, **kwargs):
-    super(RecommenderNet, self).__init__(**kwargs)
-    self.num_users = num_users
-    self.num_books = num_books
-    self.embedding_size = embedding_size
-    self.user_embedding = layers.Embedding( # layer embedding user
-        num_users,
-        embedding_size,
-        embeddings_initializer = 'he_normal',
-        embeddings_regularizer = keras.regularizers.l2(1e-6)
-    )
-    self.user_bias = layers.Embedding(num_users, 1) # layer embedding user bias
-    self.books_embedding = layers.Embedding( # layer embeddings books
-        num_books,
-        embedding_size,
-        embeddings_initializer = 'he_normal',
-        embeddings_regularizer = keras.regularizers.l2(1e-6)
-    )
-    self.books_bias = layers.Embedding(num_books, 1) # layer embedding books bias
-
-  def call(self, inputs):
-    user_vector = self.user_embedding(inputs[:,0]) # memanggil layer embedding 1
-    user_bias = self.user_bias(inputs[:, 0]) # memanggil layer embedding 2
-    books_vector = self.books_embedding(inputs[:, 1]) # memanggil layer embedding 3
-    books_bias = self.books_bias(inputs[:, 1]) # memanggil layer embedding 4
-
-    dot_user_books = tf.tensordot(user_vector, books_vector, 2)
-
-    x = dot_user_books + user_bias + books_bias
-
-    return tf.nn.sigmoid(x) # activation sigmoid
-```
-```
-model = RecommenderNet(num_users, num_books, 50) # inisialisasi model
-
-# model compile
-model.compile(
-    loss = tf.keras.losses.BinaryCrossentropy(),
-    optimizer = keras.optimizers.Adam(learning_rate=0.001),
-    metrics=[tf.keras.metrics.RootMeanSquaredError()]
-)
-```
-
-```
-# Memulai training
-
-history = model.fit(
-    x = x_train,
-    y = y_train,
-    batch_size = 8,
-    epochs = 8,
-    validation_data = (x_val, y_val)
-)
-```
-
-### Mendapatkan top-N recommendation
-Berikut implementasi kode penggunaan collaborative filtering serta outputnya:
-```
-import pandas as pd
-import numpy as np
-
-# Data input pengguna
-Id = 1214213432
-Title = 'Wuthering Heights'
-User_id = 'A14OJS0VWMOSWO'
-review_score = 2.0
-
-# Proses encoding untuk input pengguna
-encoded_user = user_to_user_encoded.get(User_id)
-encoded_book = book_to_book_encoded.get(Title)
-
-# Buat DataFrame baru dengan data yang sudah di-encode
-new_data = pd.DataFrame([[Id, Title, User_id, review_score, encoded_user, encoded_book]],
-                        columns=['Id', 'Title', 'User_id', 'review/score', 'user', 'book'])
-
-# Menggunakan User_id baru sebagai user_id
-user_id = User_id
-
-# Update variabel `resto_visited_by_user` dengan input pengguna baru
-resto_visited_by_user = new_data[new_data.User_id == user_id]
-
-# Ambil buku yang belum dikunjungi oleh pengguna
-resto_not_visited = details_df[~details_df['Title'].isin(resto_visited_by_user.Title.values)]['Title']
-resto_not_visited = list(
-    set(resto_not_visited)
-    .intersection(set(book_to_book_encoded.keys()))
-)
-
-resto_not_visited = [[book_to_book_encoded.get(x)] for x in resto_not_visited]
-user_encoder = user_to_user_encoded.get(user_id)
-user_resto_array = np.hstack(
-    ([[user_encoder]] * len(resto_not_visited), resto_not_visited)
-)
-
-# Prediksi rating untuk buku yang belum dikunjungi
-ratings = model.predict(user_resto_array).flatten()
-
-# Ambil 10 rekomendasi teratas
-top_ratings_indices = ratings.argsort()[-10:][::-1]
-recommended_resto_ids = [
-    book_encoded_to_book.get(resto_not_visited[x][0]) for x in top_ratings_indices
-]
-
-print('Showing recommendations for users: {}'.format(user_id))
-print('===' * 9)
-print('Book with high ratings from user')
-print('----' * 8)
-
-top_resto_user = (
-    resto_visited_by_user.sort_values(
-        by='review/score',
-        ascending=False
-    )
-    .head(5)
-    .Title.values
-)
-
-resto_df_rows = details_df[details_df['Title'].isin(top_resto_user)]
-for row in resto_df_rows.itertuples():
-    print(row.Title, ':', row.categories)
-
-print('----' * 8)
-print('Top 10 books recommendation')
-print('----' * 8)
-
-recommended_resto = details_df[details_df['Title'].isin(recommended_resto_ids)]
-for row in recommended_resto.itertuples():
-    print(row.Title, ':', row.categories)
-
-```
+![1](https://github.com/user-attachments/assets/ef1db814-c803-4a02-878e-c064b1b87c25)
 
 
 
