@@ -154,8 +154,21 @@ Berikut matriks tf-idf untuk beberapa judul buku dan kategori
 
 ![matriks](https://github.com/user-attachments/assets/5a50b367-5b35-449d-af66-161144c461ce)
 
-6. Menerapkan Cosine Similarity
 
+6. Melakukan Encoding
+Pada bagian ini, akan dilakukan penyandian (encode) fitur User_id dan Title ke dalam teks integer. 
+![encode user](https://github.com/user-attachments/assets/d6d8d857-2b2a-46fc-9569-1daa9558b5fe)
+
+7. Split Data.
+
+Pada pengembangan model menggunakan RecommenderNet, data train dan validasi dibagi dengan komposisi 80:20. Dengan catatan melakukan pemetaan (mapping) data user dan book menjadi satu value terlebih dahulu. Kemudian, membuat rating dalam skala 0 sampai 1 agar mudah dalam melakukan proses training. 
+
+
+## Modelling
+
+### Content Based Filtering
+
+Pemodelan untuk Content Based Filtering kita menggunakan fungsi cosine_similarity.
 Cosine similarity mengukur tingkat kesamaan antara dua vektor dengan menentukan sejauh mana kedua vektor tersebut mengarah ke arah yang sama. Ia menghitung sudut kosinus antara kedua vektor, di mana semakin kecil sudut kosinus, semakin tinggi nilai cosine similarity.
 
 ![sudut](https://github.com/user-attachments/assets/142a355b-b53f-47ab-915c-4793e6e1819a)
@@ -170,19 +183,25 @@ Berikut hasil penerapannya.
 
 ![output cosine](https://github.com/user-attachments/assets/05ce6e29-9988-4d2e-b250-7c73212b40b8)
 
-7. Melakukan Encoding
-Pada bagian ini, akan dilakukan penyandian (encode) fitur User_id dan Title ke dalam teks integer. 
-![encode user](https://github.com/user-attachments/assets/d6d8d857-2b2a-46fc-9569-1daa9558b5fe)
+Setelah memiliki data similarity antar buku (Title), kemudian kita akan memberikan sejumlah rekomendasi terhadap pengguna dengan menggunakan fungsi yakni sebagai berikut.
 
-8. Split Data.
+```
+def book_recommendations(nama_buku, similarity_data=cosine_sim_df, items=data[['Title', 'categories']], k=5):
+    # Mengambil data dengan menggunakan argpartition untuk melakukan partisi secara tidak langsung sepanjang sumbu yang diberikan
+    # Dataframe diubah menjadi numpy
+    # Range(start, stop, step)
+    index = similarity_data.loc[:,nama_buku].to_numpy().argpartition(
+        range(-1, -k, -1))
 
-Pada pengembangan model menggunakan RecommenderNet, data train dan validasi dibagi dengan komposisi 80:20. Dengan catatan melakukan pemetaan (mapping) data user dan book menjadi satu value terlebih dahulu. Kemudian, membuat rating dalam skala 0 sampai 1 agar mudah dalam melakukan proses training. 
+    # Mengambil data dengan similarity terbesar dari index yang ada
+    closest = similarity_data.columns[index[-1:-(k+2):-1]]
 
+    # Drop nama_buku agar nama resto yang dicari tidak muncul dalam daftar rekomendasi
+    closest = closest.drop(nama_buku, errors='ignore')
 
-## Modelling
+    return pd.DataFrame(closest).merge(items).head(k)
+```
 
-### Content Based Filtering
-Pemodelan untuk Content Based Filtering kita menggunakan fungsi cosine_similarity yang telah dibahas sebelumnyam dengan mengidentifikasi kemiripan pada dataframe.
 Keterangan:
 ```
     nama_buku : Nama buku (index kemiripan dataframe).
@@ -199,6 +218,69 @@ Berikut hasil **mendapatkan top-N recommendation** pada Content Based Filtering 
 ### Collaborative Filtering
 Pada bagian pembangunan model dengan menggunakan metode Collaborative filtering, digunakan RecommenderNet.
 RecommenderNet adalah implementasi dari model pembelajaran mesin yang menggunakan embedding untuk menangkap preferensi pengguna dan fitur item, serta produk titik untuk menghasilkan skor rekomendasi. Model ini sering digunakan dalam sistem rekomendasi untuk meningkatkan pengalaman pengguna dengan menyediakan rekomendasi yang dipersonalisasi.
+
+```
+class RecommenderNet(tf.keras.Model):
+
+  # Insialisasi fungsi
+  def __init__(self, num_users, num_books, embedding_size, **kwargs):
+    super(RecommenderNet, self).__init__(**kwargs)
+    self.num_users = num_users
+    self.num_books = num_books
+    self.embedding_size = embedding_size
+    self.user_embedding = layers.Embedding( # layer embedding user
+        num_users,
+        embedding_size,
+        embeddings_initializer = 'he_normal',
+        embeddings_regularizer = keras.regularizers.l2(1e-6)
+    )
+    self.user_bias = layers.Embedding(num_users, 1) # layer embedding user bias
+    self.books_embedding = layers.Embedding( # layer embeddings books
+        num_books,
+        embedding_size,
+        embeddings_initializer = 'he_normal',
+        embeddings_regularizer = keras.regularizers.l2(1e-6)
+    )
+    self.books_bias = layers.Embedding(num_books, 1) # layer embedding books bias
+
+  def call(self, inputs):
+    user_vector = self.user_embedding(inputs[:,0]) # memanggil layer embedding 1
+    user_bias = self.user_bias(inputs[:, 0]) # memanggil layer embedding 2
+    books_vector = self.books_embedding(inputs[:, 1]) # memanggil layer embedding 3
+    books_bias = self.books_bias(inputs[:, 1]) # memanggil layer embedding 4
+
+    dot_user_books = tf.tensordot(user_vector, books_vector, 2)
+
+    x = dot_user_books + user_bias + books_bias
+
+    return tf.nn.sigmoid(x) # activation sigmoid
+```
+
+Komponen-komponen RecommenderNet:
+
+  1. User Embedding:
+      self.user_embedding adalah lapisan embedding untuk pengguna. Lapisan ini mengubah ID pengguna menjadi vektor embedding dengan ukuran tertentu (embedding_size). Vektor ini merepresentasikan fitur-fitur pengguna dalam ruang berdimensi lebih rendah.
+
+  2. User Bias:
+      self.user_bias adalah lapisan embedding untuk bias pengguna. Bias ini adalah nilai skalar yang terkait dengan setiap pengguna untuk menangkap preferensi umum mereka.
+
+  3. Books Embedding:
+      self.books_embedding adalah lapisan embedding untuk buku. Lapisan ini mengubah ID buku menjadi vektor embedding dengan ukuran tertentu (embedding_size). Vektor ini merepresentasikan fitur-fitur buku dalam ruang berdimensi lebih rendah.
+
+  4. Books Bias:
+      self.books_bias adalah lapisan embedding untuk bias buku. Bias ini adalah nilai skalar yang terkait dengan setiap buku untuk menangkap popularitas umum mereka.
+
+Fungsi call:
+
+  - Fungsi call adalah fungsi yang dipanggil saat model melakukan forward pass. Fungsi ini menerima input berupa pasangan ID pengguna dan ID buku, lalu menghasilkan prediksi rating.
+  - Langkah-langkah dalam call:
+      1. Mengambil vektor embedding pengguna berdasarkan ID pengguna (inputs[:, 0]).
+      2. Mengambil bias pengguna berdasarkan ID pengguna.
+      3. Mengambil vektor embedding buku berdasarkan ID buku (inputs[:, 1]).
+      4. Mengambil bias buku berdasarkan ID buku.
+      5. Melakukan dot product antara vektor embedding pengguna dan vektor embedding buku untuk mendapatkan interaksi pengguna-buku.
+      6. Menambahkan bias pengguna dan bias buku ke hasil dot product.
+      7. Menggunakan fungsi aktivasi sigmoid untuk menghasilkan prediksi rating akhir.
 
 Berikut hasil **mendapatkan top-N recommendation** pada Collaborative Filtering atau rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya (review/score atau rating).
 
