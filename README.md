@@ -20,7 +20,7 @@ Berdasarkan [jurnal penelitian](https://www.academia.edu/download/59762468/10.1.
 1. Content-Based Filtering
    Content-based filtering adalah pendekatan yang digunakan untuk memberikan rekomendasi terhadap pengguna atau pembaca dengan membandingkan history data dan menyajikan rekomendasi berdasarkan jumlah kesamaan seperti deskripsi item sebelumnya.
 2. Collaborative Filtering
-   Collaborative Filtering adalah pendekatan yang umum digunakan dalam merancang sistem rekomendasi, yang bekerja memberikan rekomendasi untuk pengguna atau pembaca dengan membandingkan preferensi pengguna lain yang telah menilai produk dengan cara yang sama dengannya.
+   Collaborative Filtering adalah pendekatan yang umum digunakan dalam membuat sistem rekomendasi, yang bekerja memberikan rekomendasi untuk pengguna atau pembaca dengan membandingkan preferensi pengguna lain yang telah menilai produk dengan cara yang sama dengannya.
 
 Berlandaskan hal tersebut, akan dilakukan pengembangan sistem rekomendasi sebagai bahan eksperimen yang berperan untuk meningkatkan kepuasan pembaca, meningkatkan penjualan, dan menumbuhkan budaya membaca Sehingga dapat meningkatkan pengalaman pengguna dengan memudahkan mereka menemukan buku-buku baru dan menarik, ataupun untuk kepentingan penyedia buku tersebut.
 
@@ -28,13 +28,13 @@ Berlandaskan hal tersebut, akan dilakukan pengembangan sistem rekomendasi sebaga
 ## Business Understanding
 ### Problem Statements
 Berdasarkan latar belakang di atas, berikut akan dijabarkan pokok permasalahan yang dibahas dalam proyek sebagai berikut.
-- Bagaimana merancang sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya?
-- Bagaimana merancang sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_?
+- Bagaimana membuat sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya?
+- Bagaimana membuat sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_?
 
 ### Goals
 Tujuan dari proyek ini adalah:
-- Merancang sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya.
-- Merancang sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_
+- membuat sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya.
+- membuat sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_
 
 ### Solution Statements
 Berikut adalah beberapa pendekatan yang bisa digunakan untuk membangun sistem rekomendasi buku:
@@ -63,10 +63,10 @@ books_data.csv
 
 | Title                                         | Description                                               | Authors             | Image                                                                 | PreviewLink                                                       | Publisher   | PublishedDate | InfoLink                                                       | Categories                   | RatingsCount |
 |-----------------------------------------------|-----------------------------------------------------------|---------------------|-----------------------------------------------------------------------|-------------------------------------------------------------------|-------------|---------------|---------------------------------------------------------------|------------------------------|--------------|
-| Its Only Art If Its Well Hung!                | NaN                                                       | ['Julie Strain']    | ![Image](http://books.google.com/books/content?id=DykPAAAACAAJ)       | [PreviewLink](http://books.google.nl/books?id=DykPAAAACAAJ&dq=...) | NaN         | 1996          | [InfoLink](http://books.google.nl/books?id=DykPAAAACAAJ&dq=...) | ['Comics & Graphic Novels'] | NaN          |
-| Dr. Seuss: American Icon                      | Philip Nel takes a fascinating look into the key events... | ['Philip Nel']      | ![Image](http://books.google.com/books/content?id=IjvHQsCn_pgC)       | [PreviewLink](http://books.google.nl/books?id=IjvHQsCn_pgC&pg=...) | A&C Black   | 2005-01-01    | [InfoLink](http://books.google.nl/books?id=IjvHQsCn_pgC&dq=...) | ['Biography & Autobiography'] | NaN          |
-| Wonderful Worship in Smaller Churches         | This resource includes twelve principles in unique wors... | ['David R. Ray']    | ![Image](http://books.google.com/books/content?id=2tsDAAAACAAJ)       | [PreviewLink](http://books.google.nl/books?id=2tsDAAAACAAJ&dq=...) | NaN         | 2000          | [InfoLink](http://books.google.nl/books?id=2tsDAAAACAAJ&dq=...) | ['Religion']                 | NaN          |
-| Whispers of the Wicked Saints                 | Julia Thomas finds her life spinning out of control whi... | ['Veronica Haddon'] | ![Image](http://books.google.com/books/content?id=aRSIgJlq6JwC)       | [PreviewLink](http://books.google.nl/books?id=aRSIgJlq6JwC&dq=...) | iUniverse   | 2005-02       | [InfoLink](http://books.google.nl/books?id=aRSIgJlq6JwC&dq=...) | ['Fiction']                  | NaN          |
+| Its Only Art If Its Well Hung!                | NaN                                                       | ['Julie Strain']    | ![Image](http://books.google.com/books/content?id=DykPAAAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api)       | [PreviewLink](http://books.google.nl/books?id=DykPAAAACAAJ&dq=...) | NaN         | 1996          | [InfoLink](http://books.google.nl/books?id=DykPAAAACAAJ&dq=...) | ['Comics & Graphic Novels'] | NaN          |
+| Dr. Seuss: American Icon                      | Philip Nel takes a fascinating look into the key events... | ['Philip Nel']      | ![Image](http://books.google.com/books/content?id=IjvHQsCn_pgC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api)       | [PreviewLink](http://books.google.nl/books?id=IjvHQsCn_pgC&pg=...) | A&C Black   | 2005-01-01    | [InfoLink](http://books.google.nl/books?id=IjvHQsCn_pgC&dq=...) | ['Biography & Autobiography'] | NaN          |
+| Wonderful Worship in Smaller Churches         | This resource includes twelve principles in unique wors... | ['David R. Ray']    | ![Image](http://books.google.com/books/content?id=2tsDAAAACAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api)       | [PreviewLink](http://books.google.nl/books?id=2tsDAAAACAAJ&dq=...) | NaN         | 2000          | [InfoLink](http://books.google.nl/books?id=2tsDAAAACAAJ&dq=...) | ['Religion']                 | NaN          |
+| Whispers of the Wicked Saints                 | Julia Thomas finds her life spinning out of control whi... | ['Veronica Haddon'] | ![Image](http://books.google.com/books/content?id=aRSIgJlq6JwC&printsec=frontcover&img=1&zoom=1&source=gbs_api)       | [PreviewLink](http://books.google.nl/books?id=aRSIgJlq6JwC&dq=...) | iUniverse   | 2005-02       | [InfoLink](http://books.google.nl/books?id=aRSIgJlq6JwC&dq=...) | ['Fiction']                  | NaN          |
 | Nation Dance: Religion, Identity and Cultural | NaN                                                       | ['Edward Long']     | NaN                                                                   | [PreviewLink](http://books.google.nl/books?id=399SPgAACAAJ&dq=...) | NaN         | 2003-03-01    | [InfoLink](http://books.google.nl/books?id=399SPgAACAAJ&dq=...) | NaN                          | NaN          |
 
 
