@@ -126,37 +126,12 @@ Books_rating.csv
 ## Data Preparation
 1. Melakukan cleaning data meliputi, _missing value_ dan _duplicate_
 2. Membentuk ulang kolom pada dataframe, meliputi pemilihan atribut yang dianggap relevan untuk perancangan proyek.
-```
-# Membentuk ulang kolom pada dataframe rating
-rating = rating[['Id', 'Title', 'User_id', 'review/score']]
-```
-
-```
-# Membentuk ulang kolom pada dataframe
-details = details[['Title', 'categories']]
-```
-
-3. Memilih data, meliputi pemotongan dataset yang digunakan karena jumlah yang terlalu besar sehingga untuk meningkatkan aksebilitas saat perancangan model.
-
-```
-rating = rating.sample(frac=0.1, random_state=42)
-```
-
-```
-details = details.sample(frac=0.1, random_state=42)
-```
-
+Seperti 'Id', 'Title', 'User_id', 'review/score' untuk dataframe rating, dan
+'Title', 'categories' untuk dafaframe details
+3. Memilih data yang digunakan dengan jumlah sebesar 0,1 dari dari dataset asli dikarenakan jumlah record dataset asli yang terlalu besar sehingga hal ini diperlukan untuk meningkatkan aksebilitas saat perancangan model.
 4. Membersihkan data pada kolom kategori di dataframe details dari tanda kurung siku dan petik.
-```
-details['categories'] = details['categories'].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
-details['categories'] = details['categories'].str.replace('[', '').str.replace(']', '').str.replace("'", '')
-```
-
-
-## Modelling
-
-### Model Development dengan Content Based Filtering
-#### 1. Mengimplementasikan TF-IDF
+5. Mengimplementasikan TF-IDF.
+   
 TF-IDF adalah metode umum yang digunakan dalam sistem pengambilan informasi dan ekstraksi dokumen yang relevan dengan permintaan tertentu. Dalam pendekatan ini, terdapat dua komponen utama, yaitu TF dan IDF. TF (Term Frequency) mengukur seberapa sering sebuah kata atau istilah muncul dalam teks tertentu. Karena panjang dokumen dapat bervariasi, kami melakukan normalisasi dengan membagi frekuensi kemunculan kata dengan panjang dokumen untuk mengakomodasi perbedaan tersebut
 
 Berikut rumus TF:
@@ -179,8 +154,7 @@ Berikut matriks tf-idf untuk beberapa judul buku dan kategori
 
 ![matriks](https://github.com/user-attachments/assets/5a50b367-5b35-449d-af66-161144c461ce)
 
-
-#### 2. Menerapkan Cosine Similarity
+6. Menerapkan Cosine Similarity
 
 Cosine similarity mengukur tingkat kesamaan antara dua vektor dengan menentukan sejauh mana kedua vektor tersebut mengarah ke arah yang sama. Ia menghitung sudut kosinus antara kedua vektor, di mana semakin kecil sudut kosinus, semakin tinggi nilai cosine similarity.
 
@@ -196,31 +170,39 @@ Berikut hasil penerapannya.
 
 ![output cosine](https://github.com/user-attachments/assets/05ce6e29-9988-4d2e-b250-7c73212b40b8)
 
+7. Melakukan Encoding
+Pada bagian ini, akan dilakukan penyandian (encode) fitur User_id dan Title ke dalam teks integer. 
+![encode user](https://github.com/user-attachments/assets/d6d8d857-2b2a-46fc-9569-1daa9558b5fe)
 
-### 3. Mendapatkan top-N recommendation
-Pada bagian berikut, akan ditampilkan hasil rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya
+8. Split Data.
+
+Pada pengembangan model menggunakan RecommenderNet, data train dan validasi dibagi dengan komposisi 80:20. Dengan catatan melakukan pemetaan (mapping) data user dan book menjadi satu value terlebih dahulu. Kemudian, membuat rating dalam skala 0 sampai 1 agar mudah dalam melakukan proses training. 
+
+
+## Modelling
+
+### Content Based Filtering
+Pemodelan untuk Content Based Filtering kita menggunakan fungsi cosine_similarity yang telah dibahas sebelumnyam dengan mengidentifikasi kemiripan pada dataframe.
+Keterangan:
+```
+    nama_buku : Nama buku (index kemiripan dataframe).
+    Similarity_data : Dataframe mengenai similarity yang telah kita definisikan sebelumnya.
+    Items : Nama dan fitur yang digunakan untuk mendefinisikan kemiripan, dalam hal ini adalah ‘Title’ dan ‘categories’.
+    k : Banyak rekomendasi yang ingin diberikan, dalam hal ini adalah 5.
+```
+
+Berikut hasil **mendapatkan top-N recommendation** pada Content Based Filtering atau rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya
 
 ![implementasi content based](https://github.com/user-attachments/assets/d7b9cffb-b6a6-44a7-84a3-5f2e1a8cc13f)
 
 
-### Model Development dengan Collaborative Filtering
-
-#### 1. Melakukan Encoding
-Pada bagian ini, akan dilakukan penyandian (encode) fitur User_id dan Title ke dalam teks integer. 
-![encode user](https://github.com/user-attachments/assets/d6d8d857-2b2a-46fc-9569-1daa9558b5fe)
-
-
-#### 2. Split Data
-Pada bagian ini, data train dan validasi dibagi dengan komposisi 80:20. Namun sebelumnya, kita perlu memetakan (mapping) data user dan book menjadi satu value. Kemudian, membuat rating dalam skala 0 sampai 1 agar mudah dalam melakukan proses training. 
-
-#### 3. Membangun model dengan RecommenderNet
+### Collaborative Filtering
+Pada bagian pembangunan model dengan menggunakan metode Collaborative filtering, digunakan RecommenderNet.
 RecommenderNet adalah implementasi dari model pembelajaran mesin yang menggunakan embedding untuk menangkap preferensi pengguna dan fitur item, serta produk titik untuk menghasilkan skor rekomendasi. Model ini sering digunakan dalam sistem rekomendasi untuk meningkatkan pengalaman pengguna dengan menyediakan rekomendasi yang dipersonalisasi.
 
-### 4. Mendapatkan top-N recommendation
-Pada bagian berikut, akan ditampilkan hasil rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya (review/score atau rating).
+Berikut hasil **mendapatkan top-N recommendation** pada Collaborative Filtering atau rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya (review/score atau rating).
 
 ![1](https://github.com/user-attachments/assets/ef1db814-c803-4a02-878e-c064b1b87c25)
-
 
 
 ## Evaluasi
