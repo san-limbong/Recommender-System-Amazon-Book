@@ -124,10 +124,34 @@ Books_rating.csv
 
 
 ## Data Preparation
-1. Membersihkan data, meliputi _missing value_ dan data duplikat.
-2. Mengkontruksi data, meliputi pemilihan atribut yang dianggap relevan untuk perancangan proyek.
+1. Melakukan cleaning data meliputi, _missing value_ dan _duplicate_
+2. Membentuk ulang kolom pada dataframe, meliputi pemilihan atribut yang dianggap relevan untuk perancangan proyek.
+```
+# Membentuk ulang kolom pada dataframe rating
+rating = rating[['Id', 'Title', 'User_id', 'review/score']]
+```
+
+```
+# Membentuk ulang kolom pada dataframe
+details = details[['Title', 'categories']]
+```
+
 3. Memilih data, meliputi pemotongan dataset yang digunakan karena jumlah yang terlalu besar sehingga untuk meningkatkan aksebilitas saat perancangan model.
-4. Transformasi data, meliputi menyesuaikan data dengan format yang dianggap kurang tepat dan diperbaharui untuk menunjang perancagan model.
+
+```
+rating = rating.sample(frac=0.1, random_state=42)
+```
+
+```
+details = details.sample(frac=0.1, random_state=42)
+```
+
+4. Membersihkan data pada kolom kategori di dataframe details dari tanda kurung siku dan petik.
+```
+details['categories'] = details['categories'].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+details['categories'] = details['categories'].str.replace('[', '').str.replace(']', '').str.replace("'", '')
+```
+
 
 ## Modelling
 
@@ -353,6 +377,8 @@ Number of User: 37559, Number of Book: 17165, Min Rating: 1.0, Max Rating: 5.0
 ```
 
 #### Split Data
+Pada bagian ini, data train dan validasi dibagi dengan komposisi 80:20. Namun sebelumnya, kita perlu memetakan (mapping) data user dan book menjadi satu value. Kemudian, membuat rating dalam skala 0 sampai 1 agar mudah dalam melakukan proses training. 
+
 Kode program:
 ```
 # Membuat variabel x untuk mencocokkan data user dan resto menjadi satu value
@@ -523,9 +549,6 @@ for row in recommended_resto.itertuples():
 
 ```
 
-Output:
-
-![1](https://github.com/user-attachments/assets/dd470c9d-b4b7-4435-9c77-982b3d09ff9e)
 
 
 ## Evaluasi
@@ -544,7 +567,11 @@ Berikut hasil evaluasi rmse pada proyek ini.
 
 ![rmse](https://github.com/user-attachments/assets/670b8319-1161-43fa-a7f9-f1d6350559f2)
 
-Berdasarkan data tersebut, masih terdapat kekurangan dalam bentuk error rate yang cenderung kurang baik, dan overfitting. Hal ini disebabkan keterbatasan sumber daya atau _environtment_ serta kurang lengkapnya kategori bawaan dari dataset yang disediakan. 
+1. Berdasarkan data tersebut, masih terdapat kekurangan dalam bentuk error rate yang cenderung kurang baik, dan overfitting. Hal ini disebabkan keterbatasan sumber daya atau _environtment_ serta kurang lengkapnya kategori bawaan dari dataset yang disediakan. 
+
+2. Berdasarkan hasil keseluruhan diatas, kita telah membuat sistem yang dapat memberi rekomendasi buku berdasarkan kesamaan konten atau deskripsi item yang pernah dibaca oleh pengguna sebelumnya dengan menerapkan Content-Based Filtering (CBF).
+4. Berdasarkan hasil keseluruhan diatas, kita telah juga sistem yang dapat memberi rekomendasi buku berdasarkan persamaan preferensi pengguna lainnya _(review/score atau rating)_ dengan menggunakan Collaborative Filtering (CF).
+
 
 ## Deployment
 
